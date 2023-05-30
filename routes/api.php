@@ -26,5 +26,5 @@ Route::group([
     Route::get('/profile', [AuthController::class, 'userProfile'])->middleware('auth:api');
 
     Route::resource('user', UserController::class)->only(['index', 'store', 'edit', 'update', 'destroy'])->middleware('auth:api');
-    Route::post('recover/user/{id}', [UserController::class, 'recoverDeletedUser']);
+    Route::post('recover/user/{id}', [UserController::class, 'recoverDeletedUser'])->middleware('auth:api');
 });

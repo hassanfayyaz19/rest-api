@@ -26,25 +26,29 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'credential' => 'required|string',
-            'password' => 'required|string|min:6',
-        ]);
+        try {
+            $validator = Validator::make($request->all(), [
+                'credential' => 'required|string',
+                'password' => 'required|string|min:6',
+            ]);
 
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            if ($validator->fails()) {
+                return response()->json($validator->errors(), 422);
+            }
+
+            $credential = $request->input('credential');
+            $field = filter_var($credential, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
+            if (!$token = auth()->attempt([$field => $credential, 'password' => $request->input('password')])) {
+                return response()->json(['status' => 'error', 'message' => __('Unauthorized')], 401);
+            }
+            $user = Auth::user();
+            $user->client_ip = $request->ip();
+            $user->save();
+            return $this->createNewToken($token);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()]);
         }
-
-        $credential = $request->input('credential');
-        $field = filter_var($credential, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
-
-        if (!$token = auth()->attempt([$field => $credential, 'password' => $request->input('password')])) {
-            return response()->json(['error' => 'Unauthorized'], 401);
-        }
-        $user = Auth::user();
-        $user->client_ip = $request->ip();
-        $user->save();
-        return $this->createNewToken($token);
     }
 
     /**
@@ -54,26 +58,33 @@ class AuthController extends Controller
      */
     public function register(Request $request)
     {
-        $validator = Validator::make($request->all(), [
-            'username' => 'required|string|between:2,100|unique:users',
-            'email' => 'required|string|email|max:100|unique:users',
-            'password' => 'required|string|confirmed|min:6',
-            'dob' => 'required|date',
-        ]);
-        if ($validator->fails()) {
-            return response()->json($validator->errors(), 400);
+        try {
+            $validator = Validator::make($request->all(), [
+                'username' => 'required|string|between:2,100|unique:users',
+                'email' => 'required|string|email|max:100|unique:users',
+                'password' => 'required|string|confirmed|min:6',
+                'dob' => 'required|date',
+            ]);
+            if ($validator->fails()) {
+                return response()->json($validator->errors(), 400);
+            }
+            $user = User::create(array_merge(
+                $validator->validated(),
+                [
+                    'password' => bcrypt($request->password),
+                    'client_ip' => $request->ip() // Retrieve the user's IP address
+                ]
+            ));
+
+            return response()->json([
+                'status' => 'success',
+                'message' => __('User successfully registered'),
+                'user' => $user
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()]);
         }
-        $user = User::create(array_merge(
-            $validator->validated(),
-            [
-                'password' => bcrypt($request->password),
-                'client_ip' => $request->ip() // Retrieve the user's IP address
-            ]
-        ));
-        return response()->json([
-            'message' => 'User successfully registered',
-            'user' => $user
-        ], 201);
     }
 
     /**
@@ -83,8 +94,12 @@ class AuthController extends Controller
      */
     public function logout()
     {
-        auth()->logout();
-        return response()->json(['message' => 'User successfully signed out']);
+        try {
+            auth()->logout();
+            return response()->json(['status' => 'success', 'message' => __('User successfully signed out')]);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()]);
+        }
     }
 
     /**

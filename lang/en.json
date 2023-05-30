@@ -3,5 +3,13 @@
     "The :attribute must contain at least one number.": "The :attribute must contain at least one number.",
     "The :attribute must contain at least one symbol.": "The :attribute must contain at least one symbol.",
     "The :attribute must contain at least one uppercase and one lowercase letter.": "The :attribute must contain at least one uppercase and one lowercase letter.",
-    "The given :attribute has appeared in a data leak. Please choose a different :attribute.": "The given :attribute has appeared in a data leak. Please choose a different :attribute."
+    "The given :attribute has appeared in a data leak. Please choose a different :attribute.": "The given :attribute has appeared in a data leak. Please choose a different :attribute.",
+    "User created successfully": "User created successfully",
+    "User updated successfully": "User updated successfully",
+    "User deleted successfully": "User deleted successfully",
+    "User recovered successfully": "User recovered successfully",
+    "User not found": "User not found",
+    "User successfully signed out": "User successfully signed out",
+    "User successfully registered": "User successfully registered",
+    "Unauthorized": "Unauthorized"
 }

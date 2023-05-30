@@ -55,4 +55,25 @@ class User extends Authenticatable implements JWTSubject
     {
         return [];
     }
+
+    public function saveUser($request)
+    {
+        $this->username = $request->username;
+        $this->email = $request->email;
+        $this->password = $request->password;
+        $this->dob = $request->dob;
+        $this->save();
+        $this->refresh();
+        return $this;
+    }
+
+    public function updateUser($request)
+    {
+        $this->username = $request->username;
+        $this->email = $request->email;
+        $this->dob = $request->dob;
+        $this->save();
+        $this->refresh();
+        return $this;
+    }
 }

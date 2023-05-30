@@ -6,6 +6,7 @@ use App\Http\Requests\UserStoreRequest;
 use App\Http\Requests\UserUpdateRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
@@ -17,8 +18,12 @@ class UserController extends Controller
      */
     public function index()
     {
-        $users = User::latest()->get();
-        return response()->json(['data' => $users]);
+        try {
+            $users = User::latest()->get();
+            return response()->json(['status' => 'success', 'data' => $users]);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()]);
+        }
     }
 
     /**
@@ -39,13 +44,14 @@ class UserController extends Controller
      */
     public function store(UserStoreRequest $request)
     {
-        $user = new User();
-        $user->username = $request->username;
-        $user->email = $request->email;
-        $user->password = $request->password;
-        $user->dob = $request->dob;
-        $user->save();
-        return response()->json(['message' => 'User created successfully', 'data' => $user]);
+        try {
+            $user = new User();
+            $data = $user->saveUser($request);
+            return response()->json(['status' => 'success', 'message' => __('User created successfully'), 'data' => $data]);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()]);
+        }
+
     }
 
     /**
@@ -67,7 +73,11 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        return response()->json(['data' => $user]);
+        try {
+            return response()->json(['data' => $user]);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()]);
+        }
     }
 
     /**
@@ -79,11 +89,12 @@ class UserController extends Controller
      */
     public function update(UserUpdateRequest $request, User $user)
     {
-        $user->username = $request->username;
-        $user->email = $request->email;
-        $user->dob = $request->dob;
-        $user->save();
-        return response()->json(['message' => 'User updated successfully', 'data' => $user]);
+        try {
+            $data = $user->updateUser($request);
+            return response()->json(['status' => 'success', 'message' => __('User updated successfully'), 'data' => $data]);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()]);
+        }
     }
 
     /**
@@ -94,18 +105,26 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        $user->delete();
-        return response()->json(['message' => 'User deleted successfully']);
+        try {
+            $user->delete();
+            return response()->json(['status' => 'success', 'message' => __('User deleted successfully')]);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()]);
+        }
     }
 
     public function recoverDeletedUser($id)
     {
-        $user = User::withTrashed()->find($id);
-        if ($user) {
-            $user->restore();
-            return response()->json(['message' => 'User recovered successfully']);
-        } else {
-            return response()->json(['error' => 'User not found'], 404);
+        try {
+            $user = User::withTrashed()->find($id);
+            if ($user) {
+                $user->restore();
+                return response()->json(['status' => 'success', 'message' => __('User recovered successfully')]);
+            }
+
+            return response()->json(['status' => 'error', 'message' => __('User not found')], 404);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => $e->getMessage()]);
         }
     }
 }
